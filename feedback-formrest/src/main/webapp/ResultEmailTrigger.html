@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Results</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+            padding: 8px;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+</head>
+<body>
+<h1>Result Page</h1>
+<h3 id="uname"></h3>
+<h3 id="uphone"></h3>
+<h3 id="uemail"></h3>
+
+<div id="results">
+    <table id="dataTable">
+        <thead>
+        <tr>
+         
+            <th>Question</th>
+            <th>Answer</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<button id="sendEmailBtn">Send Email</button>
+
+<script>
+
+
+
+$(document).ready(function() {
+	  var batch = 'java';
+	  var burl = `/data/api/questions/${batch}`;
+	  $.ajax({
+	    type: 'GET',
+	    url: burl,
+	    dataType: 'json',
+	    success: function(data) {
+// console.log(data);
+
+	      for (var i = 0; i < data.length; i++) {
+	        var question = data[i];
+	        var questionId = question.id;
+	        var questionText = question.text1;
+	        
+	        
+	      }
+	    }
+	  })
+	  });
+
+
+
+
+
+
+
+
+
+
+ 
+
+    $(document).ready(function() {
+        // Get cookie values
+
+        function getQueryParamValue(param) {
+            var urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+		
+        var selectedBatch = getQueryParamValue('data');
+        var batch = selectedBatch ? selectedBatch : 'allData';
+		//get questions
+		var questionData;
+	  var burl = `/data/api/questions/${batch}`;
+	  $.ajax({
+	    type: 'GET',
+	    url: burl,
+	    dataType: 'json',
+	    success: function(data) {
+	console.log(data)
+	questionData = data;
+
+	      
+	    }
+	  })
+        
+        var burl = `/data/api/results/${batch}`;
+        $.ajax({
+            type: 'GET',
+            url: burl,
+            dataType: 'json',
+            success: function(data) {
+                var tbody = $('#dataTable tbody');
+                tbody.empty();
+                data.forEach(function(result) {
+                var text1;
+               
+                	for (const obj of questionData) {
+                		
+                		  if (obj.id == result.question) {
+                		    text1 = obj.text1;
+                		    break;
+                		  }
+                		}
+                    var row = '<tr>' +
+                        
+                        '<td>' + text1 + '</td>' +
+                        '<td>' + result.ans + '</td>' +
+                        '</tr>';
+					
+                    tbody.append(row);
+                });
+            },
+            error: function(xhr, status, error) {
+                console.log('Error: ' + error);
+            }
+        });
+
+        
+
+        $(document).ready(function() {
+        	  let cookie = {};
+        	  document.cookie.split(';').forEach(function(el) {
+        	    let [k,v] = el.split('=');
+        	    cookie[k.trim()] = v;
+        	  });
+        
+        // Send email when button is clicked
+        $('#sendEmailBtn').click(function() {
+        	var userId = cookie.id;
+       			var email;
+        	  console.log("Hello"); // Assuming the user ID is stored in the cookie
+        	  $.ajax({
+        	    type: 'GET',
+        	    url: '/data/api/user/' + userId,
+        	    dataType: 'json',
+        	    success: function(data) {
+        	  	  email = data.email;
+        	  	  console.log(data.email);
+        	  	var subject = 'Results';
+                var body = $('#results').html();
+             
+                $.ajax({
+                    type: 'POST',
+                    url: '/sendEmail',
+                    data: {
+                    	
+                        recipientEmail: email,
+                        subject: subject,
+                        body: body
+                        
+                        
+                    },
+                    
+                    success: function(response) {
+                        console.log('Email sent successfully!');
+                    },
+                    error: function(xhr, status, error) {
+                        console.log('Error sending email: ' + error);
+                    }
+                    
+                });
+        	    },
+        	    error: function() {
+        	      console.log('Error retrieving user details');
+        	    }
+        	  });
+        	
+            
+        });
+        });
+        });
+</script>
+</body>
+</html>
